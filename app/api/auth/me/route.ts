@@ -36,28 +36,31 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Token invalide" }, { status: 401 });
   }
 
-  // 🔹 Récupérer l'utilisateur sans lean()
-  const utilisateurDoc = await User.findOne({ email: decoded.email });
+  // 🔹 Récupérer l'utilisateur
+  const utilisateurDoc = await User.findOne({ email: decoded.email }).exec();
   if (!utilisateurDoc) {
     return NextResponse.json({ error: "Utilisateur non trouvé" }, { status: 404 });
   }
 
+  // 🔹 Transformer en type TS avec cast "any" pour Turbopack
   const utilisateur: UtilisateurType = {
-    _id: utilisateurDoc._id.toString(),
-    username: utilisateurDoc.username,
-    email: utilisateurDoc.email,
-    emailVerified: utilisateurDoc.emailVerified,
+    _id: (utilisateurDoc as any)._id.toString(),
+    username: (utilisateurDoc as any).username,
+    email: (utilisateurDoc as any).email,
+    emailVerified: (utilisateurDoc as any).emailVerified,
   };
 
-  // 🔹 Récupérer les tournois sans lean()
-  const tournoisDocs = await Tournoi.find({ participants: utilisateurDoc._id });
+  // 🔹 Récupérer les tournois
+  const tournoisDocs = await Tournoi.find({ participants: (utilisateurDoc as any)._id }).exec();
 
-  // 🔹 Mapper les _id en string pour TypeScript
-  const tournois: TournoiType[] = tournoisDocs.map(t => ({
-    _id: t._id.toString(),
-    name: t.name,
-    secret: t.secret,
-  }));
+  const tournois: TournoiType[] = tournoisDocs.map(t => {
+    const tAny = t as any;
+    return {
+      _id: tAny._id.toString(),
+      name: tAny.name,
+      secret: tAny.secret,
+    };
+  });
 
   return NextResponse.json({
     username: utilisateur.username,
