@@ -2,7 +2,7 @@
 import { NextResponse } from "next/server";
 import connectMongo from "@/lib/mongodb";
 import User from "@/models/User";
-import Tournoi from "@/models/Tournoi";
+import Tournoi from "@/models/Tournament";
 import jwt from "jsonwebtoken";
 
 // Clé secrète pour le JWT
