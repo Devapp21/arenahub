@@ -36,6 +36,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Token invalide" }, { status: 401 });
   }
 
+  // ✅ récupérer l'utilisateur sans lean()
   const utilisateurDoc = await User.findOne({ email: decoded.email });
   if (!utilisateurDoc) {
     return NextResponse.json({ error: "Utilisateur non trouvé" }, { status: 404 });
@@ -48,9 +49,8 @@ export async function GET(request: Request) {
     emailVerified: utilisateurDoc.emailVerified,
   };
 
-  const tournoisDocs = await Tournoi.find({
-    participants: utilisateurDoc._id,
-  });
+  // ✅ récupérer les tournois sans lean() et mapper l'_id en string
+  const tournoisDocs = await Tournoi.find({ participants: utilisateurDoc._id });
 
   const tournois: TournoiType[] = tournoisDocs.map(t => ({
     _id: t._id.toString(),
