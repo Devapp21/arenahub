@@ -3,7 +3,6 @@ import connectMongo from "@/lib/mongodb";
 import User from "@/models/User";
 import Tournoi from "@/models/Tournament";
 import jwt from "jsonwebtoken";
-import mongoose from "mongoose";
 
 const JWT_SECRET = process.env.JWT_SECRET || "changeme";
 
@@ -37,24 +36,32 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Token invalide" }, { status: 401 });
   }
 
-  const utilisateur = await User.findOne({ email: decoded.email }).lean<UtilisateurType>();
-  if (!utilisateur) {
+  const utilisateurDoc = await User.findOne({ email: decoded.email });
+  if (!utilisateurDoc) {
     return NextResponse.json({ error: "Utilisateur non trouvé" }, { status: 404 });
   }
 
-  // Conversion en ObjectId pour être sûr que TypeScript accepte
-  const tournois = await Tournoi.find({
-    participants: new mongoose.Types.ObjectId(utilisateur._id)
-  }).lean<TournoiType[]>();
+  const utilisateur: UtilisateurType = {
+    _id: utilisateurDoc._id.toString(),
+    username: utilisateurDoc.username,
+    email: utilisateurDoc.email,
+    emailVerified: utilisateurDoc.emailVerified,
+  };
+
+  const tournoisDocs = await Tournoi.find({
+    participants: utilisateurDoc._id,
+  });
+
+  const tournois: TournoiType[] = tournoisDocs.map(t => ({
+    _id: t._id.toString(),
+    name: t.name,
+    secret: t.secret,
+  }));
 
   return NextResponse.json({
     username: utilisateur.username,
     email: utilisateur.email,
     emailVerified: utilisateur.emailVerified,
-    tournois: tournois.map(t => ({
-      _id: t._id,
-      name: t.name,
-      secret: t.secret,
-    })),
+    tournois,
   });
 }
