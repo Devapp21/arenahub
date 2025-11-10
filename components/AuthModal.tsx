@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { supabase } from "../lib/supabaseClient";
+import { useRouter } from "next/navigation";
 
 type AuthModalProps = {
   isOpen: boolean;
@@ -9,7 +9,8 @@ type AuthModalProps = {
 };
 
 export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
-  const [mode, setMode] = useState<"login" | "register" | "forgot">("login");
+  const router = useRouter();
+  const [mode, setMode] = useState<"login" | "register">("login");
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -19,7 +20,8 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
   if (!isOpen) return null;
 
   // 🔹 Connexion
-  const handleLogin = async () => {
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
     setMessage("");
 
     if (!email || !password) {
@@ -27,17 +29,31 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
       return;
     }
 
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email, // TypeScript est content, car email est obligatoirement une string
-      password,
+    const res = await fetch("/api/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
     });
 
-    if (error) setMessage(error.message);
-    else onClose();
+    const data = await res.json();
+
+    if (!res.ok) {
+      setMessage(data.message || "Erreur lors de la connexion.");
+    } else {
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("pseudo", data.pseudo);
+      localStorage.setItem("email", data.email);
+
+      onClose();
+      router.push("/profil");
+    }
   };
 
   // 🔹 Inscription
-  const handleRegister = async () => {
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setMessage("");
+
     if (!username || !email || !password || !confirmPassword) {
       setMessage("Veuillez remplir tous les champs.");
       return;
@@ -48,32 +64,20 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
       return;
     }
 
-    setMessage("");
-
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { data: { username } },
+    const res = await fetch("/api/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ pseudo: username, email, password }),
     });
 
-    if (error) setMessage(error.message);
-    else setMessage(
-      "Compte créé avec succès ! Vous pouvez maintenant vous connecter."
-    );
-  };
+    const data = await res.json();
 
-  // 🔹 Mot de passe oublié
-  const handleForgotPassword = async () => {
-    setMessage("");
-
-    if (!email) {
-      setMessage("Veuillez entrer votre email.");
-      return;
+    if (!res.ok) {
+      setMessage(data.message || "Erreur lors de l'inscription.");
+    } else {
+      setMessage("Compte créé avec succès ! Vous pouvez maintenant vous connecter.");
+      setMode("login");
     }
-
-    const { data, error } = await supabase.auth.resetPasswordForEmail(email);
-    if (error) setMessage(error.message);
-    else setMessage("Un email de réinitialisation a été envoyé !");
   };
 
   return (
@@ -109,20 +113,12 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
             >
               Se connecter
             </button>
-            <div className="flex justify-between text-sm">
-              <p
-                className="text-blue-400 cursor-pointer"
-                onClick={() => setMode("register")}
-              >
-                Créer un compte
-              </p>
-              <p
-                className="text-blue-400 cursor-pointer"
-                onClick={() => setMode("forgot")}
-              >
-                Mot de passe oublié ?
-              </p>
-            </div>
+            <p
+              className="text-blue-400 cursor-pointer text-sm"
+              onClick={() => setMode("register")}
+            >
+              Créer un compte
+            </p>
           </>
         )}
 
@@ -168,31 +164,6 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
               onClick={() => setMode("login")}
             >
               Déjà un compte ?
-            </p>
-          </>
-        )}
-
-        {mode === "forgot" && (
-          <>
-            <h2 className="text-red-500 text-2xl mb-4">Mot de passe oublié</h2>
-            <input
-              type="email"
-              placeholder="Email"
-              className="w-full p-2 mb-2 rounded bg-gray-800 text-white"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-            <button
-              onClick={handleForgotPassword}
-              className="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2 rounded mb-2"
-            >
-              Envoyer l’email
-            </button>
-            <p
-              className="text-blue-400 cursor-pointer text-sm"
-              onClick={() => setMode("login")}
-            >
-              Retour à la connexion
             </p>
           </>
         )}

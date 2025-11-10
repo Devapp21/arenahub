@@ -3,52 +3,30 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { supabase } from "../../lib/supabaseClient";
 
 type Tournament = {
-  id: string;
+  _id: string;
   name: string;
   description: string;
   image: string;
   date: string;
 };
 
-type TournamentWithCount = Tournament & {
-  participantsCount: number;
-};
-
 export default function TournamentsPage() {
-  const [tournaments, setTournaments] = useState<TournamentWithCount[]>([]);
+  const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchTournaments = async () => {
-      // 1️⃣ Récupère tous les tournois
-      const { data: tournamentsData, error } = await supabase
-        .from("tournaments")
-        .select("*")
-        .order("date", { ascending: true });
-
-      if (error || !tournamentsData) {
-        console.error(error);
+      try {
+        const res = await fetch("/api/tournaments");
+        const data = await res.json();
+        setTournaments(data);
+      } catch (err) {
+        console.error("Erreur fetch tournois :", err);
+      } finally {
         setLoading(false);
-        return;
       }
-
-      // 2️⃣ Pour chaque tournoi, récupère le nombre de participants
-      const tournamentsWithCount: TournamentWithCount[] = await Promise.all(
-        tournamentsData.map(async (tournament: Tournament) => {
-          const { count } = await supabase
-            .from("participants")
-            .select("*", { count: "exact", head: true })
-            .eq("tournament_id", tournament.id);
-
-          return { ...tournament, participantsCount: count || 0 };
-        })
-      );
-
-      setTournaments(tournamentsWithCount);
-      setLoading(false);
     };
 
     fetchTournaments();
@@ -63,9 +41,9 @@ export default function TournamentsPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-5xl">
         {tournaments.map((t) => (
           <Link
-            key={t.id}
-            href={`/tournaments/${t.id}`}
-            className="bg-gray-900 rounded-xl shadow-lg overflow-hidden hover:scale-105 transform transition"
+            key={t._id}
+            href={`/tournaments/${t._id}`}
+            className="bg-gray-900 rounded-xl shadow-lg overflow-hidden hover:scale-105 transform transition flex flex-col h-full"
           >
             {t.image && (
               <div className="relative w-full h-56">
@@ -77,14 +55,14 @@ export default function TournamentsPage() {
                 />
               </div>
             )}
-            <div className="p-4">
+            <div className="p-4 flex flex-col flex-1">
               <h2 className="text-xl font-bold text-gray-200">{t.name}</h2>
-              <p className="text-gray-400 text-sm">{t.description}</p>
+              {/* Description avec hauteur fixe et tronquée */}
+              <p className="text-gray-400 text-sm flex-1 overflow-hidden line-clamp-3">
+                {t.description || "Aucune description disponible."}
+              </p>
               <p className="text-gray-400 text-sm mt-2">
                 Date : {new Date(t.date).toLocaleDateString()}
-              </p>
-              <p className="text-gray-400 text-sm mt-1">
-                Participants : {t.participantsCount}
               </p>
             </div>
           </Link>

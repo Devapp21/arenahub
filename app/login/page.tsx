@@ -1,39 +1,40 @@
 "use client";
 
 import { useState } from "react";
-import { supabase } from "../../lib/supabaseClient";
 import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
-  const [identifier, setIdentifier] = useState(""); // email ou pseudo
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
   const router = useRouter();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ identifier, password }),
+      });
 
-    // Si l'utilisateur renseigne un pseudo, on récupère l'email correspondant
-    let emailToUse = identifier;
-    const { data: userByUsername } = await supabase
-      .from("users")
-      .select("email")
-      .eq("username", identifier)
-      .single();
+      const data = await res.json();
 
-    if (userByUsername?.email) {
-      emailToUse = userByUsername.email;
-    }
+      if (!res.ok) {
+        setMessage(data.error);
+        return;
+      }
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email: emailToUse,
-      password,
-    });
+      // ✅ Stocke le token dans localStorage
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("username", data.user.username);
+      localStorage.setItem("email", data.user.email);
 
-    if (error) setMessage(error.message);
-    else {
       setMessage("Connexion réussie !");
-      router.push("/profile"); // Redirige vers profil
+      router.push("/profile");
+    } catch (err) {
+      console.error(err);
+      setMessage("Erreur lors de la connexion.");
     }
   };
 

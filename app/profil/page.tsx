@@ -1,155 +1,184 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { supabase } from "../../lib/supabaseClient";
-import Link from "next/link";
 
 type Tournament = {
-  id: string;
+  _id: string;
   name: string;
+  description: string;
   date: string;
 };
 
-type UserProfile = {
-  id: string;
-  pseudo: string;
+type User = {
+  username: string;
   email: string;
 };
 
 export default function ProfilPage() {
-  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [loading, setLoading] = useState(true);
-  const router = useRouter();
+  const [message, setMessage] = useState("");
+  const [showConfirm, setShowConfirm] = useState<{ open: boolean; tournamentId?: string }>({ open: false });
 
-  useEffect(() => {
-    const fetchUserData = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        router.push("/");
-        return;
-      }
-
-      // Récupérer le pseudo
-      const { data: profileData } = await supabase
-        .from("profiles")
-        .select("pseudo")
-        .eq("id", user.id)
-        .single();
-
-      setProfile({
-        id: user.id,
-        pseudo: profileData?.pseudo ?? "Utilisateur",
-        email: user.email ?? "",
-      });
-
-      // Récupérer les tournois auxquels l'utilisateur est inscrit
-      const { data: userTournaments } = await supabase
-        .from("participants")
-        .select("tournament_id, tournaments(id, name, date)")
-        .eq("user_id", user.id);
-
-      const formatted = userTournaments?.map((t: any) => t.tournaments) ?? [];
-      setTournaments(formatted);
+  // Récupère le profil et les tournois
+  const fetchProfil = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setMessage("Vous devez être connecté.");
       setLoading(false);
-    };
+      return;
+    }
 
-    fetchUserData();
-  }, [router]);
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    router.push("/");
-  };
-
-  const handleDeleteAccount = async () => {
-    if (!confirm("Êtes-vous sûr de vouloir supprimer votre compte ?")) return;
-
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    await supabase.from("participants").delete().eq("user_id", user.id);
-    await supabase.from("profiles").delete().eq("id", user.id);
-    await supabase.auth.admin.deleteUser(user.id);
-
-    alert("Votre compte a été supprimé.");
-    router.push("/");
-  };
-
-  // 🔹 Fonction pour se désinscrire d'un tournoi
-  const handleUnregister = async (tournamentId: string) => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    const { error } = await supabase
-      .from("participants")
-      .delete()
-      .eq("user_id", user.id)
-      .eq("tournament_id", tournamentId);
-
-    if (error) {
-      console.error(error);
-      alert("Erreur lors de la désinscription.");
-    } else {
-      // Retirer le tournoi de la liste affichée
-      setTournaments(tournaments.filter(t => t.id !== tournamentId));
-      alert("Vous avez été désinscrit du tournoi.");
+    try {
+      const res = await fetch("/api/profil", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setUser(data.user);
+        setTournaments(data.tournaments);
+      } else {
+        setMessage(data.error || "Erreur lors de la récupération du profil");
+      }
+    } catch (err) {
+      console.error(err);
+      setMessage("Erreur lors de la récupération du profil");
+    } finally {
+      setLoading(false);
     }
   };
 
-  if (loading) return <p className="text-center mt-10">Chargement...</p>;
+  useEffect(() => {
+    fetchProfil();
+  }, []);
+
+  // Fonction pour se désinscrire d’un tournoi
+  const handleUnregister = async () => {
+    if (!showConfirm.tournamentId) return;
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    try {
+      const res = await fetch(`/api/profil/unregister/${showConfirm.tournamentId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setTournaments(tournaments.filter(t => t._id !== showConfirm.tournamentId));
+        setMessage("Vous avez été désinscrit du tournoi.");
+      } else {
+        setMessage(data.error || "Erreur lors de la désinscription");
+      }
+    } catch (err) {
+      console.error(err);
+      setMessage("Erreur lors de la désinscription");
+    } finally {
+      setShowConfirm({ open: false });
+    }
+  };
+
+  // Fonction pour supprimer le compte
+  const handleDeleteAccount = async () => {
+    const confirmDelete = confirm("Êtes-vous sûr de vouloir supprimer votre compte ? Cette action est irréversible !");
+    if (!confirmDelete) return;
+
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    try {
+      const res = await fetch("/api/profil/delete", {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        localStorage.removeItem("token");
+        alert("Votre compte a été supprimé.");
+        window.location.href = "/"; // redirection vers l'accueil
+      } else {
+        alert(data.error || "Erreur lors de la suppression du compte");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Erreur lors de la suppression du compte");
+    }
+  };
+
+  if (loading) return <p className="text-center mt-20">Chargement...</p>;
+  if (!user) return <p className="text-center mt-20">{message || "Utilisateur introuvable"}</p>;
 
   return (
-    <div className="min-h-screen bg-black text-gray-100 p-8 flex flex-col items-center">
-      <h1 className="text-3xl font-bold text-red-500 mb-6">Mon Profil</h1>
+    <div className="min-h-screen p-8 bg-black text-gray-100 flex flex-col items-center">
+      <h1 className="text-3xl font-bold text-red-500 mb-6">Profil de {user.username}</h1>
+      <p className="text-gray-200 mb-4">Email : {user.email}</p>
 
-      {profile && (
-        <div className="bg-gray-900 p-6 rounded-xl shadow-lg w-full max-w-md text-center">
-          <p className="text-lg"><strong>Pseudo :</strong> {profile.pseudo}</p>
-          <p className="text-sm text-gray-400 mt-2"><strong>Email :</strong> {profile.email}</p>
+      <h2 className="text-2xl font-bold text-red-500 mb-4">Mes tournois inscrits</h2>
+      {message && <p className="text-red-400 mb-4">{message}</p>}
 
-          <button
-            onClick={handleLogout}
-            className="mt-6 bg-red-500 hover:bg-red-600 text-white py-2 px-6 rounded-lg transition"
-          >
-            Se déconnecter
-          </button>
+      {tournaments.length === 0 ? (
+        <p className="text-gray-400">Vous n’êtes inscrit à aucun tournoi pour le moment.</p>
+      ) : (
+        <ul className="space-y-4 w-full max-w-3xl">
+          {tournaments.map((t) => (
+            <li
+              key={t._id}
+              className="bg-gray-900 p-4 rounded-xl shadow-md flex justify-between items-center"
+            >
+              <a href={`/tournaments/${t._id}`} className="flex-1 cursor-pointer">
+                <p className="text-xl font-bold text-gray-200">{t.name}</p>
+                <p className="text-gray-400">{t.description}</p>
+                <p className="text-gray-400 mt-1">
+                  Date : {new Date(t.date).toLocaleDateString()}
+                </p>
+              </a>
+              <button
+                className="bg-red-500 hover:bg-red-600 text-white py-1 px-4 rounded"
+                onClick={() => setShowConfirm({ open: true, tournamentId: t._id })}
+              >
+                Se désinscrire
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
 
-          <button
-            onClick={handleDeleteAccount}
-            className="mt-4 text-sm text-gray-400 hover:text-red-400 transition"
-          >
-            Supprimer mon compte
-          </button>
+      {/* POP-UP DE CONFIRMATION */}
+      {showConfirm.open && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+          <div className="bg-gray-900 p-6 rounded-xl shadow-xl w-80 text-center">
+            <h2 className="text-xl font-bold text-red-500 mb-4">Confirmer la désinscription</h2>
+            <p className="text-gray-300 mb-6">
+              Êtes-vous sûr de vouloir vous désinscrire de ce tournoi ?
+            </p>
+            <div className="flex justify-center gap-4">
+              <button
+                onClick={handleUnregister}
+                className="bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded"
+              >
+                Oui
+              </button>
+              <button
+                onClick={() => setShowConfirm({ open: false })}
+                className="bg-gray-700 hover:bg-gray-600 text-white py-2 px-4 rounded"
+              >
+                Non
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
-      {/* Liste des tournois */}
-      <div className="mt-10 w-full max-w-md">
-        <h2 className="text-xl font-semibold mb-4 text-center">
-          Tournois auxquels je suis inscrit :
-        </h2>
-
-        {tournaments.length > 0 ? (
-          <ul className="space-y-3">
-            {tournaments.map((t) => (
-              <li key={t.id} className="bg-gray-800 p-4 rounded-lg hover:bg-gray-700 transition flex justify-between items-center">
-                <Link href={`/tournaments/${t.id}`} className="text-gray-200 font-bold">
-                  {t.name} - {new Date(t.date).toLocaleDateString()}
-                </Link>
-                <button
-                  onClick={() => handleUnregister(t.id)}
-                  className="bg-gray-700 hover:bg-gray-600 text-white py-1 px-3 rounded text-sm"
-                >
-                  Se désinscrire
-                </button>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-gray-400 text-center">Vous n’êtes inscrit à aucun tournoi.</p>
-        )}
+      {/* Lien discret pour supprimer le compte */}
+      <div className="mt-8 text-center">
+        <button
+          onClick={handleDeleteAccount}
+          className="text-gray-400 text-sm hover:text-red-500 transition-colors"
+        >
+          Supprimer mon compte
+        </button>
       </div>
     </div>
   );
