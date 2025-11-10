@@ -1,25 +1,24 @@
 import { NextResponse } from "next/server";
-import connectMongo from "../../../../lib/mongodb";
-import TournamentModel from "../../../../models/Tournament";
-import ParticipantModel from "../../../../models/Participant";
-import UserModel from "../../../../models/User";
+import connectMongo from "@/lib/mongodb";
+import TournamentModel from "@/models/Tournament";
+import ParticipantModel from "@/models/Participant";
+import UserModel from "@/models/User";
 import { ObjectId } from "mongodb";
 import jwt from "jsonwebtoken";
 
 const JWT_SECRET = process.env.JWT_SECRET || "changeme";
 
-// --- GET : récupérer un tournoi et ses participants ---
-export async function GET(request: Request, { params }: { params: any }) {
+// --- GET : tournoi et participants ---
+export async function GET(req: Request, { params }: { params: any }) {
   try {
-    console.log("MONGODB_URI =", process.env.MONGODB_URI); // log pour vérifier
     await connectMongo();
-    console.log("✅ Connecté à MongoDB");
+    console.log("✅ Connecté à MongoDB (tournoi spécifique)");
 
-    const { id } = await params;
+    const { id } = params;
     if (!id) return NextResponse.json({ error: "ID non fourni" }, { status: 400 });
 
     let objectId: ObjectId;
-    try { objectId = new ObjectId(id); } 
+    try { objectId = new ObjectId(id); }
     catch { return NextResponse.json({ error: "ID invalide" }, { status: 400 }); }
 
     const tournament = await TournamentModel.findById(objectId).lean();
@@ -42,30 +41,26 @@ export async function GET(request: Request, { params }: { params: any }) {
       participants,
     });
 
-  } catch (error: any) {
-    console.error("Erreur GET tournois :", error);
-    return NextResponse.json({
-      error: error.message,
-      stack: error.stack,
-      name: error.name,
-    }, { status: 500 });
+  } catch (err: any) {
+    console.error("Erreur GET tournoi :", err);
+    return NextResponse.json({ error: err.message, name: err.name, stack: err.stack }, { status: 500 });
   }
 }
 
-// --- POST : inscrire un participant au tournoi ---
-export async function POST(request: Request, { params }: { params: any }) {
+// --- POST : inscription participant ---
+export async function POST(req: Request, { params }: { params: any }) {
   try {
     await connectMongo();
 
-    const { id } = await params;
+    const { id } = params;
     if (!id) return NextResponse.json({ error: "ID non fourni" }, { status: 400 });
 
-    const authHeader = request.headers.get("authorization");
+    const authHeader = req.headers.get("authorization");
     if (!authHeader) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
 
     const token = authHeader.replace("Bearer ", "");
     let decoded;
-    try { decoded = jwt.verify(token, JWT_SECRET) as { id: string }; } 
+    try { decoded = jwt.verify(token, JWT_SECRET) as { id: string }; }
     catch { return NextResponse.json({ error: "Token invalide" }, { status: 401 }); }
 
     const user = await UserModel.findById(decoded.id);
@@ -96,12 +91,8 @@ export async function POST(request: Request, { params }: { params: any }) {
       participant: { _id: participant._id, pseudo: user.pseudo, email: user.email, tournament_id: participant.tournament_id },
     });
 
-  } catch (error: any) {
-    console.error("Erreur POST tournois :", error);
-    return NextResponse.json({
-      error: error.message,
-      stack: error.stack,
-      name: error.name,
-    }, { status: 500 });
+  } catch (err: any) {
+    console.error("Erreur POST tournoi :", err);
+    return NextResponse.json({ error: err.message, name: err.name, stack: err.stack }, { status: 500 });
   }
 }
