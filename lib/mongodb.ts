@@ -1,7 +1,7 @@
 // lib/mongodb.ts
 import mongoose from "mongoose";
 
-const MONGODB_URI = process.env.MONGODB_URI || "mongodb+srv://okitodevapp_db_user:eWTNOs3pDJ3mzFUe@arenahub.m6cyjpn.mongodb.net/";
+const MONGODB_URI = process.env.MONGODB_URI || "mongodb+srv://okitodevapp_db_user:<Warzonehub94>@arenahub.m6cyjpn.mongodb.net/?appName=arenahub";
 
 if (!MONGODB_URI) {
   throw new Error("⚠️ MONGODB_URI n'est pas défini dans les variables d'environnement !");
