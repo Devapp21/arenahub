@@ -1,3 +1,4 @@
+console.log("route.ts utilisé !");
 import { NextResponse } from "next/server";
 import connectMongo from "@/lib/mongodb";
 import User from "@/models/User";
