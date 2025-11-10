@@ -36,12 +36,13 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Token invalide" }, { status: 401 });
   }
 
-  // ✅ récupérer l'utilisateur sans lean()
+  // Récupérer l'utilisateur sans lean()
   const utilisateurDoc = await User.findOne({ email: decoded.email });
   if (!utilisateurDoc) {
     return NextResponse.json({ error: "Utilisateur non trouvé" }, { status: 404 });
   }
 
+  // Transformer l'objet utilisateur pour typage TS clair
   const utilisateur: UtilisateurType = {
     _id: utilisateurDoc._id.toString(),
     username: utilisateurDoc.username,
@@ -49,9 +50,10 @@ export async function GET(request: Request) {
     emailVerified: utilisateurDoc.emailVerified,
   };
 
-  // ✅ récupérer les tournois sans lean() et mapper l'_id en string
+  // Récupérer les tournois sans lean()
   const tournoisDocs = await Tournoi.find({ participants: utilisateurDoc._id });
 
+  // Transformer les _id en string pour TS
   const tournois: TournoiType[] = tournoisDocs.map(t => ({
     _id: t._id.toString(),
     name: t.name,
