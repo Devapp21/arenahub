@@ -14,7 +14,7 @@ export async function GET(req: Request, { params }: { params: any }) {
     await connectMongo();
     console.log("✅ Connecté à MongoDB (tournoi spécifique)");
 
-    const { id } = params;
+    const { id } = await params;
     if (!id) return NextResponse.json({ error: "ID non fourni" }, { status: 400 });
 
     let objectId: ObjectId;
@@ -52,7 +52,7 @@ export async function POST(req: Request, { params }: { params: any }) {
   try {
     await connectMongo();
 
-    const { id } = params;
+    const { id } = await params;
     if (!id) return NextResponse.json({ error: "ID non fourni" }, { status: 400 });
 
     const authHeader = req.headers.get("authorization");

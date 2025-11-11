@@ -25,13 +25,21 @@ export default function LoginPage() {
         return;
       }
 
-      // ✅ Stocke le token dans localStorage
+      // ✅ Supprimer l'ancien token et infos au cas où
+      localStorage.removeItem("token");
+      localStorage.removeItem("username");
+      localStorage.removeItem("email");
+
+      // ✅ Stocker le nouveau token et infos
       localStorage.setItem("token", data.token);
       localStorage.setItem("username", data.user.username);
       localStorage.setItem("email", data.user.email);
 
       setMessage("Connexion réussie !");
-      router.push("/profile");
+
+      // 🔹 Rediriger et forcer le rechargement pour que Profil lise le nouveau token
+      router.push("/profil");
+      window.location.reload();
     } catch (err) {
       console.error(err);
       setMessage("Erreur lors de la connexion.");

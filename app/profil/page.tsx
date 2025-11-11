@@ -97,7 +97,7 @@ export default function ProfilPage() {
       if (res.ok) {
         localStorage.removeItem("token");
         alert("Votre compte a été supprimé.");
-        window.location.href = "/"; // redirection vers l'accueil
+        window.location.href = "/";
       } else {
         alert(data.error || "Erreur lors de la suppression du compte");
       }
@@ -129,10 +129,8 @@ export default function ProfilPage() {
             >
               <a href={`/tournaments/${t._id}`} className="flex-1 cursor-pointer">
                 <p className="text-xl font-bold text-gray-200">{t.name}</p>
-                <p className="text-gray-400">{t.description}</p>
-                <p className="text-gray-400 mt-1">
-                  Date : {new Date(t.date).toLocaleDateString()}
-                </p>
+                <p className="text-gray-400 mt-1 line-clamp-3 overflow-hidden">{t.description}</p>
+                <p className="text-gray-400 mt-1">Date : {new Date(t.date).toLocaleDateString()}</p>
               </a>
               <button
                 className="bg-red-500 hover:bg-red-600 text-white py-1 px-4 rounded"
