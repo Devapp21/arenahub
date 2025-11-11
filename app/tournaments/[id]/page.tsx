@@ -176,7 +176,12 @@ export default function TournamentPage() {
         )}
 
         <h1 className="text-3xl font-bold text-red-500">{tournament.name}</h1>
-        <p className="text-gray-200 text-center">{tournament.description}</p>
+
+        {/* Descriptif complet avec retours à la ligne */}
+        <p className="text-gray-200 text-center whitespace-pre-wrap">
+          {tournament.description}
+        </p>
+
         <p className="text-gray-400">
           Date : {new Date(tournament.date).toLocaleDateString("fr-FR")} à{" "}
           {new Date(tournament.date).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
