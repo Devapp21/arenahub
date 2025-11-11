@@ -13,11 +13,19 @@ export async function POST(req: Request) {
     const { identifier, password } = await req.json();
 
     const user = await UserModel.findOne({
-      $or: [{ email: identifier }, { username: identifier }],
+      $or: [{ email: identifier }, { pseudo: identifier }], // corrige username -> pseudo
     });
 
     if (!user) {
       return NextResponse.json({ error: "Utilisateur introuvable" }, { status: 401 });
+    }
+
+    // 🔹 Vérification si l'utilisateur a confirmé son email
+    if (!user.isVerified) {
+      return NextResponse.json(
+        { error: "Vous devez confirmer votre email pour vous connecter." },
+        { status: 401 }
+      );
     }
 
     const isValid = await bcrypt.compare(password, user.password);
@@ -26,15 +34,14 @@ export async function POST(req: Request) {
     }
 
     const token = jwt.sign(
-  { id: user._id, role: user.role, pseudo: user.pseudo, email: user.email },
-  JWT_SECRET,
-  { expiresIn: "7d" }
-);
-
+      { id: user._id, role: user.role, pseudo: user.pseudo, email: user.email },
+      JWT_SECRET,
+      { expiresIn: "7d" }
+    );
 
     return NextResponse.json({
       token,
-      user: { username: user.username, email: user.email },
+      user: { username: user.pseudo, email: user.email },
     });
   } catch (err) {
     console.error(err);
