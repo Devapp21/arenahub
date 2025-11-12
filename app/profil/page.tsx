@@ -112,7 +112,7 @@ export default function ProfilPage() {
 
   return (
     <div className="min-h-screen p-8 bg-black text-gray-100 flex flex-col items-center">
-      <h1 className="text-3xl font-bold text-red-500 mb-6">Profil de {user.username}</h1>
+      <h1 className="text-4xl font-bold text-red-500 mb-6">Profil de {user.username}</h1>
       <p className="text-gray-200 mb-4">Email : {user.email}</p>
 
       <h2 className="text-2xl font-bold text-red-500 mb-4">Mes tournois inscrits</h2>

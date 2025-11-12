@@ -80,3 +80,8 @@ body {
     @apply bg-background text-foreground;
   }
 }
+@layer base {
+  .paragraph-description {
+    @apply font-sans text-gray-200 text-justify leading-relaxed whitespace-pre-wrap;
+  }
+}

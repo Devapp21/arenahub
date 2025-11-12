@@ -37,7 +37,7 @@ export default function TournamentsPage() {
 
   return (
     <div className="min-h-screen p-8 bg-black text-gray-100 flex flex-col items-center">
-      <h1 className="text-3xl font-bold text-red-500 mb-8">Tournois disponibles</h1>
+      <h1 className="text-5xl font-display text-red-500 text-center drop-shadow-lg mb-8">Tournois disponibles</h1>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-5xl">
         {tournaments.map((t) => (
           <Link

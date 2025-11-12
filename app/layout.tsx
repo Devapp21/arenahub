@@ -1,13 +1,13 @@
 "use client";
 
 import "./globals.css";
-import { Orbitron } from "next/font/google";
+import { Black_Ops_One } from "next/font/google";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { Menu, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-const orbitron = Orbitron({ subsets: ["latin"], variable: "--font-orbitron" });
+const blackOps = Black_Ops_One({ subsets: ["latin"], weight: "400", variable: "--font-blackops" });
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -118,14 +118,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   };
 
   return (
-    <html lang="fr" className="bg-black text-gray-100">
-      <body className={`${orbitron.variable} font-sans`}>
+     <html lang="fr" className={`${blackOps.variable} bg-black text-gray-100`}>
+      <body className= "font-sans">
         {/* Navbar */}
         <nav className="w-full flex justify-between items-center px-6 py-4 border-b border-gray-800 bg-black/70 backdrop-blur-md fixed top-0 z-50">
           <Link href="/" onClick={() => setMobileMenuOpen(false)}>
-            <h1 className="text-2xl font-bold text-red-500 tracking-widest cursor-pointer">
-              ArenaHub
+            <h1 className="text-3xl font-extrabold tracking-widest text-transparent bg-clip-text 
+             bg-gradient-to-r from-red-600 via-orange-500 to-yellow-500 drop-shadow-[0_0_10px_rgba(255,0,0,0.8)] 
+             uppercase cursor-pointer select-none">  Warzone Arena
+
             </h1>
+
           </Link>
 
           <div className="hidden md:flex gap-8 text-sm uppercase">
