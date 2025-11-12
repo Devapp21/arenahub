@@ -6,14 +6,14 @@ import jwt from "jsonwebtoken";
 
 const JWT_SECRET = process.env.JWT_SECRET || "changeme";
 
-// POST : endpoint réel pour le login
 export async function POST(req: Request) {
   try {
     await connectMongo();
     const { identifier, password } = await req.json();
 
+    // Cherche par email ou pseudo
     const user = await UserModel.findOne({
-      $or: [{ email: identifier }, { username: identifier }],
+      $or: [{ email: identifier }, { pseudo: identifier }],
     });
 
     if (!user) {
@@ -26,23 +26,17 @@ export async function POST(req: Request) {
     }
 
     const token = jwt.sign(
-  { id: user._id, role: user.role, pseudo: user.pseudo, email: user.email },
-  JWT_SECRET,
-  { expiresIn: "7d" }
-);
-
+      { id: user._id, role: user.role, pseudo: user.pseudo, email: user.email },
+      JWT_SECRET,
+      { expiresIn: "7d" }
+    );
 
     return NextResponse.json({
       token,
-      user: { username: user.username, email: user.email },
+      user: { pseudo: user.pseudo, email: user.email },
     });
   } catch (err) {
     console.error(err);
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
-}
-
-// GET : uniquement pour test dans le navigateur
-export async function GET(req: Request) {
-  return NextResponse.json({ message: "La route /api/auth/login fonctionne ! ✅" });
 }

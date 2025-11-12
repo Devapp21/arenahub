@@ -22,11 +22,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   const [confirmPassword, setConfirmPassword] = useState("");
   const [message, setMessage] = useState("");
 
-  // Vérifier si utilisateur déjà connecté au chargement
+  // Vérifie si l'utilisateur est déjà connecté
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
-      // Ici tu peux décoder ton JWT pour récupérer les infos utilisateur
       try {
         const payload = JSON.parse(atob(token.split(".")[1]));
         setUser({ pseudo: payload.pseudo, email: payload.email });
@@ -36,7 +35,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     }
   }, []);
 
-  // --- Fonctions Auth MongoDB ---
+  // --- Fonction de connexion ---
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setMessage("");
@@ -44,7 +43,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     const res = await fetch("/api/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ identifier: email, password }), // IMPORTANT : identifier
     });
 
     const data = await res.json();
@@ -58,6 +57,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     }
   };
 
+  // --- Fonction d'inscription ---
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setMessage("");
@@ -79,17 +79,38 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
     const data = await res.json();
 
-    if (!res.ok) setMessage(data.error || "Erreur lors de l'inscription");
-    else {
-      setMessage("Compte créé avec succès ! Vous pouvez maintenant vous connecter.");
-      setAuthMode("login");
-      setPseudo("");
-      setEmail("");
-      setPassword("");
-      setConfirmPassword("");
+    if (!res.ok) {
+      setMessage(data.message || "Erreur lors de l'inscription");
+      return;
     }
+
+    // ✅ Inscription réussie : connexion automatique
+    const loginRes = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ identifier: email, password }),
+    });
+
+    const loginData = await loginRes.json();
+    if (!loginRes.ok) {
+      setMessage("Inscription réussie, mais impossible de se connecter automatiquement. Essayez de vous connecter manuellement.");
+      setAuthMode("login");
+    } else {
+      localStorage.setItem("token", loginData.token);
+      setUser({ pseudo: loginData.user.pseudo, email: loginData.user.email });
+      setAuthModalOpen(false);
+      setMessage("");
+      router.push("/profil");
+    }
+
+    // Reset form
+    setPseudo("");
+    setEmail("");
+    setPassword("");
+    setConfirmPassword("");
   };
 
+  // --- Déconnexion ---
   const handleLogout = () => {
     localStorage.removeItem("token");
     setUser(null);
@@ -124,7 +145,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             )}
           </div>
 
-          {/* Mobile hamburger */}
+          {/* Mobile menu */}
           <button className="md:hidden p-2" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
             {mobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
           </button>
