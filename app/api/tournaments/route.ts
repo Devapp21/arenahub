@@ -1,6 +1,6 @@
 // app/api/tournaments/route.ts
 import connectMongo from "@/lib/mongodb";
-import Tournament from "@/models/Tournaments";
+import Tournament from "@/models/Tournament";
 import Participant from "@/models/Participant";
 import { NextResponse } from "next/server";
 
