@@ -1,21 +1,18 @@
-import { NextResponse } from "next/server";
+// app/api/tournaments/route.ts
 import connectMongo from "@/lib/mongodb";
-import TournamentModel from "@/models/Tournament";
+import Tournament from "@/models/Tournaments";
+import Participant from "@/models/Participant";
+import { NextResponse } from "next/server";
 
 export async function GET() {
   try {
     await connectMongo();
-    console.log("✅ Connecté à MongoDB (tous les tournois)");
 
-    const tournaments = await TournamentModel.find({}).sort({ date: 1 }).lean();
-    console.log("Tournois récupérés :", tournaments.length);
+    const tournaments = await Tournament.find().sort({ date: 1 });
 
-    return NextResponse.json(tournaments);
-  } catch (err: any) {
-    console.error("Erreur fetch tournois API :", err);
-    return NextResponse.json(
-      { error: err.message, name: err.name, stack: err.stack },
-      { status: 500 }
-    );
+    return NextResponse.json(tournaments, { status: 200 });
+  } catch (err) {
+    console.error("Erreur fetch tournois :", err);
+    return NextResponse.json({ error: "Impossible de récupérer les tournois" }, { status: 500 });
   }
 }

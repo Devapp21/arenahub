@@ -8,15 +8,17 @@ export async function GET(req: Request, context: { params: Promise<{ id: string 
   try {
     await connectMongo();
 
-    // ✅ await pour "déballer" le params Promise
+    // Déballer params
     const { id: tournamentId } = await context.params;
 
     if (!tournamentId) {
       return NextResponse.json({ error: "Tournoi ID manquant" }, { status: 400 });
     }
 
+    // Récupérer tous les participants du tournoi
     const participants = await Participant.find({ tournament_id: tournamentId });
 
+    // Ajouter le pseudo depuis User
     const participantsWithPseudo = await Promise.all(
       participants.map(async (p) => {
         const user = await User.findById(p.user_id).select("pseudo");
