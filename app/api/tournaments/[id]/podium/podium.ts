@@ -1,6 +1,6 @@
 // app/api/tournaments/[id]/podium/route.ts
 import connectMongo from "@/lib/mongodb";
-import Tournament from "@/models/Tournaments";
+import Tournament from "@/models/Tournament";
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 
