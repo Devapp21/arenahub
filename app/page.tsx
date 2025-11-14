@@ -2,114 +2,55 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { motion, PanInfo } from "framer-motion";
-import { useState, useEffect } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-
-type Tournament = {
-  _id: string;
-  title: string;
-  image: string;
-};
+import { motion } from "framer-motion";
 
 export default function HomePage() {
-  const [tournaments, setTournaments] = useState<Tournament[]>([]);
-  const [current, setCurrent] = useState(0);
-
-  useEffect(() => {
-    const fetchTournaments = async () => {
-      try {
-        const res = await fetch("/api/tournaments");
-        if (!res.ok) throw new Error("Erreur fetch tournois");
-        const data = await res.json();
-        setTournaments(data);
-      } catch (err) {
-        console.error(err);
-      }
-    };
-    fetchTournaments();
-  }, []);
-
-  if (!tournaments.length)
-    return <p className="text-center mt-20 text-white">Chargement...</p>;
-
-  // Carrousel infini
-  const prev = () =>
-    setCurrent((prev) => (prev - 1 + tournaments.length) % tournaments.length);
-  const next = () => setCurrent((prev) => (prev + 1) % tournaments.length);
-
-  // Swipe tactile
-  const handleDragEnd = (_: any, info: PanInfo) => {
-    if (info.offset.x < -50) next();
-    if (info.offset.x > 50) prev();
-  };
-
   return (
-   <div className="flex flex-col items-center justify-center min-h-screen bg-black p-8">
-      {/* Nouveau titre principal */}
-      <motion.h1
+    <div className="relative min-h-screen bg-black text-white flex flex-col items-center justify-center px-6 md:px-12">
+      
+      {/* Image de fond responsive */}
+      <div className="absolute inset-0 -z-10">
+        <Image
+          src="/images/warzone7.jpg" // <-- remplace par ton image
+          alt="Fond Warzone Arena"
+          fill
+          className="object-cover object-center opacity-40"
+        />
+      </div>
+
+      {/* Texte principal */}
+      <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 1 }}
-        className="text-5xl font-display text-red-500 text-center drop-shadow-lg mb-8"
+        className="text-center max-w-4xl"
       >
-        Les Tournois 
-      </motion.h1>
+        <h1 className="text-4xl md:text-6xl font-bold text-red-500 mb-6 drop-shadow-lg">
+          Bienvenue sur Warzone Arena
+        </h1>
 
-      {/* Desktop */}
-      <div className="hidden md:flex relative w-[900px] h-[400px] gap-4 overflow-hidden">
-        {tournaments.map((t, index) => (
-          <Link key={t._id} href={`/tournaments/${t._id}`}>
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              className="relative w-[280px] h-[350px] flex-shrink-0 rounded-xl overflow-hidden shadow-lg"
-            >
-              <Image src={t.image} alt={t.title} fill className="object-cover z-0" />
-              {/* Retiré overlay du nom */}
-            </motion.div>
-          </Link>
-        ))}
-      </div>
-      {/* Mobile */}
-      <div className="md:hidden relative w-full max-w-md overflow-hidden">
-        <motion.div
-          className="flex"
-          drag="x"
-          dragElastic={0.2}
-          onDragEnd={handleDragEnd}
-          animate={{ x: `-${current * 100}%` }}
-          transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        >
-          {tournaments.map((t, index) => (
-            <Link
-              key={t._id}
-              href={`/tournaments/${t._id}`}
-              className="relative w-full flex-shrink-0 h-[350px] rounded-xl overflow-hidden shadow-lg"
-            >
-              <motion.div
-                animate={{ scale: index === current ? 1.05 : 0.95 }}
-                className="w-full h-full"
-              >
-                <Image src={t.image} alt={t.title} fill className="object-cover z-0" />
-              </motion.div>
-            </Link>
-          ))}
-        </motion.div>
+        <p className="text-lg md:text-2xl text-gray-200 mb-4">
+          Le site spécialisé dans les tournois Warzone et Black Ops 7.
+          Participez à nos tournois multijoueurs et tentez de remporter de nombreux cadeaux et lots exclusifs !
+        </p>
 
-        {/* Flèches */}
-        <button
-          onClick={prev}
-          className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full z-20"
-        >
-          <ChevronLeft size={28} />
-        </button>
-        <button
-          onClick={next}
-          className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full z-20"
-        >
-          <ChevronRight size={28} />
-        </button>
-      </div>
+        <p className="text-lg md:text-2xl text-gray-200 mb-8">
+          Le prochain tournoi pour le titre de champion W-ARENA de la semaine aura lieu le <strong>28 novembre à 20h00</strong>.
+          N'attendez plus et inscrivez-vous dès maintenant pour tenter votre chance ! Et de remporter 100€ de carte cadeau !
+        </p>
+
+        {/* Bouton / Image cliquable */}
+        <Link href="/tournaments" className="inline-block mt-4">
+          <Image
+            src="/images/warzone7.jpg" // <-- image CTA
+            alt="Inscrivez-vous au tournoi"
+            width={400} // plus grande sur desktop
+            height={150}
+            className="cursor-pointer hover:scale-105 transition-transform rounded-lg shadow-lg"
+          />
+        </Link>
+      </motion.div>
     </div>
   );
 }
+

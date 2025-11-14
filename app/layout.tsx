@@ -134,6 +134,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <div className="hidden md:flex gap-8 text-sm uppercase">
             <Link href="/" className="hover:text-red-400 transition">Accueil</Link>
             <Link href="/tournaments" className="hover:text-red-400 transition">Tournois</Link>
+            <Link href="/champions" className="hover:text-red-400 transition">Champions</Link>
+
 
             {!user ? (
               <>
@@ -157,6 +159,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <div className="absolute top-full left-0 w-full bg-black/95 backdrop-blur-md flex flex-col items-center py-4 space-y-4 md:hidden">
               <Link href="/" onClick={() => setMobileMenuOpen(false)}>Accueil</Link>
               <Link href="/tournaments" onClick={() => setMobileMenuOpen(false)}>Tournois</Link>
+              <Link href="/champions" onClick={() => setMobileMenuOpen(false)}>Champions</Link>
+
 
               {!user ? (
                 <>

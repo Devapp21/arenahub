@@ -1,25 +1,43 @@
 // lib/mongodb.ts
 import mongoose from "mongoose";
 
-const MONGODB_URI = process.env.MONGODB_URI || "mongodb+srv://okitodevapp_db_user:<Warzonehub94>@arenahub.m6cyjpn.mongodb.net/?appName=arenahub";
+const MONGODB_URI = process.env.MONGODB_URI;
 
 if (!MONGODB_URI) {
-  throw new Error("⚠️ MONGODB_URI n'est pas défini dans les variables d'environnement !");
+  throw new Error("⚠️ La variable d'environnement MONGODB_URI est manquante.");
 }
 
-let isConnected = false;
+// Cache global pour éviter les multiples connexions en dev
+let cached = (global as any).mongoose;
 
-const connectMongo = async () => {
-  if (isConnected) return;
+if (!cached) {
+  cached = (global as any).mongoose = { conn: null, promise: null };
+}
 
-  try {
-    await mongoose.connect(MONGODB_URI);
-    isConnected = true;
-    console.log("✅ Connecté à MongoDB");
-  } catch (error) {
-    console.error("❌ Erreur de connexion MongoDB :", error);
+export async function connectMongo() {
+  if (cached.conn) {
+    return cached.conn;
   }
-};
+
+  if (!cached.promise) {
+    cached.promise = mongoose
+      .connect(MONGODB_URI, {
+        dbName: "arenahub",
+      })
+      .then((mongoose) => {
+        console.log("✅ Connecté à MongoDB");
+        return mongoose;
+      })
+      .catch((err) => {
+        console.error("❌ Erreur de connexion MongoDB :", err);
+        throw err;
+      });
+  }
+
+  cached.conn = await cached.promise;
+  return cached.conn;
+}
 
 export default connectMongo;
+
 

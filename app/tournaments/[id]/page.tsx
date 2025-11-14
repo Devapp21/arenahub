@@ -32,6 +32,7 @@ export default function TournamentPage() {
   const [message, setMessage] = useState("");
   const [codeMessage, setCodeMessage] = useState("");
   const [countdown, setCountdown] = useState<string | null>(null);
+  const [acceptRules, setAcceptRules] = useState(false); // ✅ Nouvelle case à cocher
 
   // Charger le tournoi et participants depuis l'API
   useEffect(() => {
@@ -94,6 +95,11 @@ export default function TournamentPage() {
   const handleRegister = async () => {
     if (!tournament) return;
 
+    if (!acceptRules) {
+      setMessage("❌ Vous devez accepter les règles pour vous inscrire.");
+      return;
+    }
+
     const token = localStorage.getItem("token");
     if (!token) {
       setMessage("Vous devez être connecté pour vous inscrire.");
@@ -124,6 +130,7 @@ export default function TournamentPage() {
     }
 
     setShowConfirm(false);
+    setAcceptRules(false); // ✅ Réinitialiser la checkbox
   };
 
   // Récupérer l'ID utilisateur courant
@@ -143,7 +150,7 @@ export default function TournamentPage() {
     if (!tournament) return;
 
     const userId = getCurrentUserId();
-    const isRegistered = participants.some(p => p.user_id === userId);
+    const isRegistered = participants.some((p) => p.user_id === userId);
 
     if (!isRegistered) {
       setCodeMessage("❌ Vous n'êtes pas inscrit à ce tournoi.");
@@ -167,7 +174,11 @@ export default function TournamentPage() {
         {tournament.image && (
           <div className="relative w-full h-80 rounded-xl overflow-hidden shadow-lg">
             <Image
-              src={tournament.image.startsWith("/") ? tournament.image : `/${tournament.image}`}
+              src={
+                tournament.image.startsWith("/")
+                  ? tournament.image
+                  : `/${tournament.image}`
+              }
               alt={tournament.name}
               fill
               className="object-cover"
@@ -177,17 +188,23 @@ export default function TournamentPage() {
 
         <h1 className="text-3xl font-bold text-red-500">{tournament.name}</h1>
 
-        {/* Descriptif complet avec retours à la ligne */}
         <p className="text-gray-200 text-center whitespace-pre-wrap">
           {tournament.description}
         </p>
 
         <p className="text-gray-400">
           Date : {new Date(tournament.date).toLocaleDateString("fr-FR")} à{" "}
-          {new Date(tournament.date).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
+          {new Date(tournament.date).toLocaleTimeString("fr-FR", {
+            hour: "2-digit",
+            minute: "2-digit",
+          })}
         </p>
 
-        {countdown && <p className="text-yellow-400 font-semibold">⏱️ Commence dans : {countdown}</p>}
+        {countdown && (
+          <p className="text-yellow-400 font-semibold">
+            ⏱️ Commence dans : {countdown}
+          </p>
+        )}
 
         <p className="text-gray-400">
           Participants : {participants.length} / {tournament.maxParticipants || "∞"}
@@ -220,16 +237,37 @@ export default function TournamentPage() {
         {codeMessage && <p className="mt-2 text-yellow-400">{codeMessage}</p>}
       </div>
 
+      {/* Modal inscription */}
       {showConfirm && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
           <div className="bg-gray-900 p-6 rounded-xl shadow-xl w-80 text-center">
             <h2 className="text-xl font-bold text-red-500 mb-4">
               Confirmer l’inscription
             </h2>
-            <p className="text-gray-300 mb-6">
+            <p className="text-gray-300 mb-4">
               Souhaitez-vous vraiment vous inscrire au tournoi{" "}
               <span className="font-semibold text-red-400">{tournament.name}</span> ?
             </p>
+
+           {/* ✅ Checkbox règles centrée */}
+<div className="flex justify-center mb-4">
+  <label className="flex items-center text-gray-200 cursor-pointer">
+    <input
+      type="checkbox"
+      checked={acceptRules}
+      onChange={(e) => setAcceptRules(e.target.checked)}
+      className="mr-2"
+    />
+    <span>
+      J’accepte les{" "}
+      <a href="/rules" className="text-red-400 underline">
+        règles
+      </a>
+    </span>
+  </label>
+</div>
+
+
             <div className="flex justify-center gap-4">
               <button
                 onClick={handleRegister}
@@ -238,7 +276,10 @@ export default function TournamentPage() {
                 Oui
               </button>
               <button
-                onClick={() => setShowConfirm(false)}
+                onClick={() => {
+                  setShowConfirm(false);
+                  setAcceptRules(false);
+                }}
                 className="bg-gray-700 hover:bg-gray-600 text-white py-2 px-4 rounded"
               >
                 Non
@@ -248,6 +289,7 @@ export default function TournamentPage() {
         </div>
       )}
 
+      {/* Modal participants */}
       {showParticipants && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
           <div className="bg-gray-900 p-6 rounded-xl shadow-xl w-96 max-h-[80vh] overflow-y-auto">
