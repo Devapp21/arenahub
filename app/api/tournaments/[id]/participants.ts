@@ -1,53 +1,40 @@
-// /pages/api/tournaments/[id]/participants.ts
-import type { NextApiRequest, NextApiResponse } from "next";
-import clientPromise from "@/lib/mongodb";
-import { ObjectId } from "mongodb";
+// app/api/tournaments/[id]/participants/route.ts
+import connectMongo from "@/lib/mongodb";
+import Participant from "@/models/Participant";
+import User from "@/models/User";
+import { NextResponse } from "next/server";
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const { id } = req.query;
-  if (!id || typeof id !== "string") return res.status(400).json({ error: "Missing tournament id" });
-
-  if (req.method !== "GET") return res.status(405).json({ error: "Method not allowed" });
-
+export async function GET(
+  _req: Request,
+  context: { params: { id: string } }
+) {
   try {
-    const client = await clientPromise;
-    const db = client.db();
-    // participants documents have user_id and tournamentId (adapt if noms diffèrent)
-    const participants = await db
-      .collection("participants")
-      .find({ tournamentId: id })
-      .toArray();
+    await connectMongo();
 
-    // Fetch user infos for each participant (user_id is assumed to be Mongo ObjectId string)
-    const userIds = participants.map((p) => {
-      try { return new ObjectId(p.user_id); } catch { return null; }
-    }).filter(Boolean);
+    const tournamentId = context.params.id;
+    if (!tournamentId) {
+      return NextResponse.json({ error: "Tournoi ID manquant" }, { status: 400 });
+    }
 
-    const users = userIds.length
-      ? await db
-          .collection("users")
-          .find({ _id: { $in: userIds } })
-          .project({ username: 1, email: 1 })
-          .toArray()
-      : [];
+    // Récupérer tous les participants pour ce tournoi
+    const participants = await Participant.find({ tournament_id: tournamentId });
 
-    // Map participants with user info
-    const results = participants.map((p) => {
-      const uid = (() => {
-        try { return p.user_id.toString(); } catch { return p.user_id; }
-      })();
-      const user = users.find((u) => u._id.toString() === uid);
-      return {
-        participantId: p._id,
-        user_id: p.user_id,
-        username: user?.username || user?.pseudo || "Utilisateur inconnu",
-        email: user?.email || null,
-      };
-    });
+    // Ajouter le pseudo depuis la collection User
+    const participantsWithPseudo = await Promise.all(
+      participants.map(async (p) => {
+        const user = await User.findById(p.user_id).select("pseudo email");
+        return {
+          _id: p._id,
+          user_id: p.user_id,
+          pseudo: user?.pseudo || "Inconnu",
+          email: user?.email || null,
+        };
+      })
+    );
 
-    return res.status(200).json(results);
+    return NextResponse.json(participantsWithPseudo, { status: 200 });
   } catch (err) {
-    console.error("Error fetching participants:", err);
-    return res.status(500).json({ error: "Erreur serveur" });
+    console.error("Erreur fetch participants :", err);
+    return NextResponse.json({ error: "Impossible de récupérer les participants" }, { status: 500 });
   }
 }
