@@ -21,7 +21,7 @@ export async function connectMongo() {
 
   if (!cached.promise) {
     cached.promise = mongoose
-      .connect(MONGODB_URI, {
+      .connect(MONGODB_URI!, { // <-- ajouter le "!" pour dire à TS que ce n'est jamais undefined
         dbName: "arenahub",
       })
       .then((mongoose) => {
@@ -39,5 +39,3 @@ export async function connectMongo() {
 }
 
 export default connectMongo;
-
-
