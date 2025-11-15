@@ -3,7 +3,8 @@ import "./globals.css";
 import { Black_Ops_One } from "next/font/google";
 import RootLayoutClient from "./RootLayoutClient"; // Client Component pour Navbar et modal
 
-const blackOps = Black_Ops_One({ subsets: ["latin"], weight: "400", variable: "--font-blackops" });
+// ✅ Utiliser className, pas variable, pour appliquer globalement la police
+const blackOps = Black_Ops_One({ subsets: ["latin"], weight: "400" });
 
 export const metadata = {
   title: "Warzone Arena - Tournois Warzone",
@@ -33,7 +34,7 @@ export const metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="fr" className={`${blackOps.variable} bg-black text-white`}>
+    <html lang="fr" className={`${blackOps.className} bg-black text-white`}>
       <body>
         {/* Client Component gérant Navbar, menu mobile et modal */}
         <RootLayoutClient />
