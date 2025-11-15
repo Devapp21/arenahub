@@ -9,6 +9,31 @@ import { useRouter } from "next/navigation";
 
 const blackOps = Black_Ops_One({ subsets: ["latin"], weight: "400", variable: "--font-blackops" });
 
+// ✅ --- META / FAVICON / OPEN GRAPH ---
+export const metadata = {
+  title: "ArenaHub - Tournois Warzone",
+  description: "Participez à nos tournois Warzone chaque semaine !",
+
+  openGraph: {
+    title: "ArenaHub - Tournois Warzone",
+    description: "Rejoins nos tournois Warzone chaque semaine.",
+    images: ["/og-image.png"], // ← Ton image de preview
+    type: "website",
+    url: "https://tondomaine.com", // Remplace par ton vrai domaine
+  },
+
+  twitter: {
+    card: "summary_large_image",
+    title: "ArenaHub - Tournois Warzone",
+    description: "Participez à nos tournois Warzone chaque semaine.",
+    images: ["/og-image.png"], // Même image que pour Open Graph
+  },
+
+  icons: {
+    icon: "/favicon.ico", // Ton favicon
+  },
+};
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -43,7 +68,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     const res = await fetch("/api/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ identifier: email, password }), // IMPORTANT : identifier
+      body: JSON.stringify({ identifier: email, password }),
     });
 
     const data = await res.json();
@@ -84,7 +109,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       return;
     }
 
-    // ✅ Inscription réussie : connexion automatique
+    // Inscription réussie : connexion automatique
     const loginRes = await fetch("/api/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -93,7 +118,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
     const loginData = await loginRes.json();
     if (!loginRes.ok) {
-      setMessage("Inscription réussie, mais impossible de se connecter automatiquement. Essayez de vous connecter manuellement.");
+      setMessage("Inscription réussie, mais impossible de se connecter automatiquement.");
       setAuthMode("login");
     } else {
       localStorage.setItem("token", loginData.token);
@@ -118,24 +143,20 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   };
 
   return (
-     <html lang="fr" className={`${blackOps.variable} bg-black text-gray-100`}>
-      <body className= "font-sans">
+    <html lang="fr" className={`${blackOps.variable} bg-black text-gray-100`}>
+      <body className="font-sans">
         {/* Navbar */}
         <nav className="w-full flex justify-between items-center px-6 py-4 border-b border-gray-800 bg-black/70 backdrop-blur-md fixed top-0 z-50">
           <Link href="/" onClick={() => setMobileMenuOpen(false)}>
             <h1 className="text-3xl font-extrabold tracking-widest text-transparent bg-clip-text 
              bg-gradient-to-r from-red-600 via-orange-500 to-yellow-500 drop-shadow-[0_0_10px_rgba(255,0,0,0.8)] 
-             uppercase cursor-pointer select-none">  Warzone Arena
-
-            </h1>
-
+             uppercase cursor-pointer select-none">Warzone Arena</h1>
           </Link>
 
           <div className="hidden md:flex gap-8 text-sm uppercase">
             <Link href="/" className="hover:text-red-400 transition">Accueil</Link>
             <Link href="/tournaments" className="hover:text-red-400 transition">Tournois</Link>
             <Link href="/champions" className="hover:text-red-400 transition">Champions</Link>
-
 
             {!user ? (
               <>
@@ -160,7 +181,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <Link href="/" onClick={() => setMobileMenuOpen(false)}>Accueil</Link>
               <Link href="/tournaments" onClick={() => setMobileMenuOpen(false)}>Tournois</Link>
               <Link href="/champions" onClick={() => setMobileMenuOpen(false)}>Champions</Link>
-
 
               {!user ? (
                 <>
