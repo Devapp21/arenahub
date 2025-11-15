@@ -36,7 +36,7 @@ export default function HomePage() {
 
         <p className="text-lg md:text-2xl text-gray-200 mb-8">
           Le prochain tournoi pour le titre de champion W-ARENA de la semaine aura lieu le <strong>28 novembre à 20h00</strong>.
-          N'attendez plus et inscrivez-vous dès maintenant pour tenter votre chance ! Et de remporter 100€ de carte cadeau !
+          N'attendez plus et inscrivez-vous dès maintenant pour tenter votre chance ! Et de remporter 50€ de carte cadeau !
         </p>
 
         {/* Bouton / Image cliquable */}
