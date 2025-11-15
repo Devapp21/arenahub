@@ -1,4 +1,6 @@
 // app/layout.tsx
+"use client"; // ✅ Ajoute ceci tout en haut
+
 import "./globals.css";
 import { Black_Ops_One } from "next/font/google";
 import Link from "next/link";
@@ -59,7 +61,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="fr" className={`${blackOps.variable} bg-black text-white`}>
       <body>
-        {/* --- Navbar --- */}
+        {/* Navbar */}
         <nav className="w-full flex justify-between items-center px-6 py-4 border-b border-gray-800 bg-black/70 backdrop-blur-md fixed top-0 z-50">
           <Link href="/" onClick={() => setMobileMenuOpen(false)}>
             <h1 className="text-3xl font-extrabold tracking-widest text-transparent bg-clip-text 
