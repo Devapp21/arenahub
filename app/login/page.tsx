@@ -52,7 +52,7 @@ export default function LoginPage() {
       <form onSubmit={handleLogin} className="flex flex-col gap-4 w-80">
         <input
           type="text"
-          placeholder="Email ou pseudo"
+          placeholder="Email"
           value={identifier}
           onChange={(e) => setIdentifier(e.target.value)}
           className="p-2 rounded bg-gray-900 text-gray-100 focus:outline-red-500"
