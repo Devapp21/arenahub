@@ -217,7 +217,7 @@ export default function RootLayoutClient() {
                 {authMode === "register" && (
                   <input type="text" placeholder="Pseudo" value={pseudo} onChange={(e) => setPseudo(e.target.value)} className="p-2 rounded bg-gray-800 text-white" required />
                 )}
-                <input type="text" placeholder={authMode === "login" ? "Email ou pseudo" : "Email"} value={emailOrPseudo} onChange={(e) => setEmailOrPseudo(e.target.value)} className="p-2 rounded bg-gray-800 text-white" required />
+                <input type="text" placeholder={authMode === "login" ? "Email" : "Email"} value={emailOrPseudo} onChange={(e) => setEmailOrPseudo(e.target.value)} className="p-2 rounded bg-gray-800 text-white" required />
                 <input type="password" placeholder="Mot de passe" value={password} onChange={(e) => setPassword(e.target.value)} className="p-2 rounded bg-gray-800 text-white" required />
                 {authMode === "register" && (
                   <input type="password" placeholder="Confirmer le mot de passe" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="p-2 rounded bg-gray-800 text-white" required />
